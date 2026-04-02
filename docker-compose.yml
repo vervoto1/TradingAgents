@@ -8,7 +8,7 @@ services:
       # vLLM URLs — connect via shared Docker network to vLLM containers
       # Port 8000 is the internal vLLM port (host maps 8001->8000, 8002->8000)
       # Override these if your vLLM containers have different names
-      - DEEP_THINK_URL=http://vllm-vision:8000/v1
+      - DEEP_THINK_URL=http://vllm-finance-think:8000/v1
       - QUICK_THINK_URL=http://vllm-finance:8000/v1
     volumes:
       # Persist reports on the host
