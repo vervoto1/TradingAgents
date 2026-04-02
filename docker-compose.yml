@@ -5,28 +5,22 @@ services:
     env_file:
       - .env
     environment:
-      # vLLM URLs — connect via shared Docker network to vLLM containers
-      # Port 8000 is the internal vLLM port (host maps 8001->8000, 8002->8000)
-      # Override these if your vLLM containers have different names
-      - DEEP_THINK_URL=http://vllm-finance-think:8000/v1
-      - QUICK_THINK_URL=http://vllm-finance:8000/v1
+      # With host networking, vLLM is on localhost just like running natively
+      - DEEP_THINK_URL=http://localhost:8001/v1
+      - QUICK_THINK_URL=http://localhost:8002/v1
     volumes:
       # Persist reports on the host
       - ./reports:/app/reports
       # Persist data cache between runs
       - tradingagents-cache:/app/tradingagents/dataflows/data_cache
-    networks:
-      - vllm-network
+    # Use host network — same networking as running natively
+    # Avoids Docker NAT issues with yfinance/Yahoo connections
+    network_mode: host
     # Keep container running for interactive access
     entrypoint: ["tail", "-f", "/dev/null"]
     stdin_open: true
     tty: true
     restart: unless-stopped
-
-networks:
-  vllm-network:
-    external: true
-    name: dip_processor-network
 
 volumes:
   tradingagents-cache:
