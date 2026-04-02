@@ -75,14 +75,24 @@ MODEL_OPTIONS: ProviderModeOptions = {
     },
     "ollama": {
         "quick": [
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
             ("Qwen3:latest (8B, local)", "qwen3:latest"),
             ("GPT-OSS:latest (20B, local)", "gpt-oss:latest"),
             ("GLM-4.7-Flash:latest (30B, local)", "glm-4.7-flash:latest"),
         ],
         "deep": [
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
             ("GLM-4.7-Flash:latest (30B, local)", "glm-4.7-flash:latest"),
             ("GPT-OSS:latest (20B, local)", "gpt-oss:latest"),
             ("Qwen3:latest (8B, local)", "qwen3:latest"),
+        ],
+    },
+    "vllm": {
+        "quick": [
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
+        ],
+        "deep": [
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
         ],
     },
 }
