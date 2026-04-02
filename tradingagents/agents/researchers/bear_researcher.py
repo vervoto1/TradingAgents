@@ -2,6 +2,8 @@ from langchain_core.messages import AIMessage
 import time
 import json
 
+from tradingagents.agents.utils.agent_utils import get_memories_with_log
+
 
 def create_bear_researcher(llm, memory):
     def bear_node(state) -> dict:
@@ -16,11 +18,7 @@ def create_bear_researcher(llm, memory):
         fundamentals_report = state["fundamentals_report"]
 
         curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
-        past_memories = memory.get_memories(curr_situation, n_matches=2)
-
-        past_memory_str = ""
-        for i, rec in enumerate(past_memories, 1):
-            past_memory_str += rec["recommendation"] + "\n\n"
+        past_memory_str, memory_entries = get_memories_with_log(memory, curr_situation, "bear_memory")
 
         prompt = f"""You are a Bear Analyst making the case against investing in the stock. Your goal is to present a well-reasoned argument emphasizing risks, challenges, and negative indicators. Leverage the provided research and data to highlight potential downsides and counter bullish arguments effectively.
 
@@ -56,6 +54,6 @@ Use this information to deliver a compelling bear argument, refute the bull's cl
             "count": investment_debate_state["count"] + 1,
         }
 
-        return {"investment_debate_state": new_investment_debate_state}
+        return {"investment_debate_state": new_investment_debate_state, "memory_log": memory_entries}
 
     return bear_node

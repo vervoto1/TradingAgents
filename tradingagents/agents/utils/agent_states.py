@@ -1,3 +1,4 @@
+import operator
 from typing import Annotated, Sequence
 from datetime import date, timedelta, datetime
 from typing_extensions import TypedDict, Optional
@@ -74,3 +75,6 @@ class AgentState(MessagesState):
         RiskDebateState, "Current state of the debate on evaluating risk"
     ]
     final_trade_decision: Annotated[str, "Final decision made by the Risk Analysts"]
+
+    # Memory usage tracking — accumulates via additive reducer so parallel nodes don't overwrite
+    memory_log: Annotated[list, operator.add]

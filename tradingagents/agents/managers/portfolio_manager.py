@@ -1,4 +1,4 @@
-from tradingagents.agents.utils.agent_utils import build_instrument_context, get_language_instruction
+from tradingagents.agents.utils.agent_utils import build_instrument_context, get_language_instruction, get_memories_with_log
 
 
 def create_portfolio_manager(llm, memory):
@@ -15,11 +15,7 @@ def create_portfolio_manager(llm, memory):
         trader_plan = state["investment_plan"]
 
         curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
-        past_memories = memory.get_memories(curr_situation, n_matches=2)
-
-        past_memory_str = ""
-        for i, rec in enumerate(past_memories, 1):
-            past_memory_str += rec["recommendation"] + "\n\n"
+        past_memory_str, memory_entries = get_memories_with_log(memory, curr_situation, "portfolio_manager_memory")
 
         prompt = f"""As the Portfolio Manager, synthesize the risk analysts' debate and deliver the final trading decision.
 
@@ -70,6 +66,7 @@ Be decisive and ground every conclusion in specific evidence from the analysts.{
         return {
             "risk_debate_state": new_risk_debate_state,
             "final_trade_decision": response.content,
+            "memory_log": memory_entries,
         }
 
     return portfolio_manager_node

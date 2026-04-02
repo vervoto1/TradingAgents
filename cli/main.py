@@ -1230,6 +1230,7 @@ def run(
     depth: int = typer.Option(1, help="Research depth: 1=shallow, 3=medium, 5=deep"),
     output_dir: str = typer.Option(None, "--output", "-o", help="Output directory (default: reports/<ticker>_<timestamp>)"),
     language: str = typer.Option("English", help="Output language for reports"),
+    json_output: bool = typer.Option(False, "--json", help="Output result as JSON to stdout (suppresses other output)"),
 ):
     """Non-interactive analysis for automation and scripting."""
     import re
@@ -1261,26 +1262,35 @@ def run(
 
     ticker = ticker.strip().upper()
 
-    console.print(f"\n[bold cyan]TradingAgents Headless Analysis[/bold cyan]")
-    console.print(f"  Ticker:    {ticker}")
-    console.print(f"  Date:      {date}")
-    console.print(f"  Provider:  {provider}")
-    console.print(f"  Deep:      {deep_model} @ {deep_url}")
-    console.print(f"  Quick:     {quick_model} @ {quick_url}")
-    console.print(f"  Analysts:  {', '.join(analyst_list)}")
-    console.print(f"  Depth:     {depth}")
-    console.print()
+    if not json_output:
+        console.print(f"\n[bold cyan]TradingAgents Headless Analysis[/bold cyan]")
+        console.print(f"  Ticker:    {ticker}")
+        console.print(f"  Date:      {date}")
+        console.print(f"  Provider:  {provider}")
+        console.print(f"  Deep:      {deep_model} @ {deep_url}")
+        console.print(f"  Quick:     {quick_model} @ {quick_url}")
+        console.print(f"  Analysts:  {', '.join(analyst_list)}")
+        console.print(f"  Depth:     {depth}")
+        console.print()
 
     # Run analysis
     ta = TradingAgentsGraph(
         selected_analysts=analyst_list,
-        debug=True,
+        debug=not json_output,
         config=config,
     )
 
     start_time = time.time()
     final_state, decision = ta.propagate(ticker, date)
     elapsed = time.time() - start_time
+
+    # JSON output mode — print structured result to stdout and exit
+    if json_output:
+        from tradingagents.api.schema import _state_to_result
+        memory_log = final_state.get("memory_log", [])
+        result = _state_to_result(final_state, decision, config, elapsed, memory_log)
+        print(result.to_json())
+        raise typer.Exit(0)
 
     # Auto-save results
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

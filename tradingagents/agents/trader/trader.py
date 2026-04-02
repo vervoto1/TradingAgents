@@ -2,7 +2,7 @@ import functools
 import time
 import json
 
-from tradingagents.agents.utils.agent_utils import build_instrument_context
+from tradingagents.agents.utils.agent_utils import build_instrument_context, get_memories_with_log
 
 
 def create_trader(llm, memory):
@@ -16,13 +16,8 @@ def create_trader(llm, memory):
         fundamentals_report = state["fundamentals_report"]
 
         curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
-        past_memories = memory.get_memories(curr_situation, n_matches=2)
-
-        past_memory_str = ""
-        if past_memories:
-            for i, rec in enumerate(past_memories, 1):
-                past_memory_str += rec["recommendation"] + "\n\n"
-        else:
+        past_memory_str, memory_entries = get_memories_with_log(memory, curr_situation, "trader_memory")
+        if not past_memory_str:
             past_memory_str = "No past memories found."
 
         context = {
@@ -44,6 +39,7 @@ def create_trader(llm, memory):
             "messages": [result],
             "trader_investment_plan": result.content,
             "sender": name,
+            "memory_log": memory_entries,
         }
 
     return functools.partial(trader_node, name="Trader")

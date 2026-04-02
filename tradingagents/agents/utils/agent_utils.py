@@ -42,6 +42,35 @@ def build_instrument_context(ticker: str) -> str:
         "preserving any exchange suffix (e.g. `.TO`, `.L`, `.HK`, `.T`)."
     )
 
+def get_memories_with_log(memory, situation: str, source_name: str, n_matches: int = 2):
+    """Retrieve memories and return both the prompt string and log entries.
+
+    Args:
+        memory: FinancialSituationMemory instance
+        situation: Current market situation text
+        source_name: Memory source identifier (e.g. "bull_memory")
+        n_matches: Number of top matches to retrieve
+
+    Returns:
+        Tuple of (prompt_string, log_entries) where log_entries is a list of dicts
+        ready to append to state["memory_log"].
+    """
+    past_memories = memory.get_memories(situation, n_matches=n_matches)
+
+    prompt_str = ""
+    log_entries = []
+    for rec in past_memories:
+        prompt_str += rec["recommendation"] + "\n\n"
+        log_entries.append({
+            "matched_situation": rec["matched_situation"],
+            "recommendation": rec["recommendation"],
+            "similarity_score": rec["similarity_score"],
+            "memory_source": source_name,
+        })
+
+    return prompt_str, log_entries
+
+
 def create_msg_delete():
     def delete_messages(state):
         """Clear messages and add placeholder for Anthropic compatibility"""

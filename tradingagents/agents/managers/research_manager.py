@@ -1,7 +1,7 @@
 import time
 import json
 
-from tradingagents.agents.utils.agent_utils import build_instrument_context
+from tradingagents.agents.utils.agent_utils import build_instrument_context, get_memories_with_log
 
 
 def create_research_manager(llm, memory):
@@ -16,11 +16,7 @@ def create_research_manager(llm, memory):
         investment_debate_state = state["investment_debate_state"]
 
         curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
-        past_memories = memory.get_memories(curr_situation, n_matches=2)
-
-        past_memory_str = ""
-        for i, rec in enumerate(past_memories, 1):
-            past_memory_str += rec["recommendation"] + "\n\n"
+        past_memory_str, memory_entries = get_memories_with_log(memory, curr_situation, "invest_judge_memory")
 
         prompt = f"""As the portfolio manager and debate facilitator, your role is to critically evaluate this round of debate and make a definitive decision: align with the bear analyst, the bull analyst, or choose Hold only if it is strongly justified based on the arguments presented.
 
@@ -55,6 +51,7 @@ Debate History:
         return {
             "investment_debate_state": new_investment_debate_state,
             "investment_plan": response.content,
+            "memory_log": memory_entries,
         }
 
     return research_manager_node

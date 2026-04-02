@@ -6,7 +6,10 @@ no token limits, works offline with any LLM provider.
 
 from rank_bm25 import BM25Okapi
 from typing import List, Tuple
+import json
+import os
 import re
+import tempfile
 
 
 class FinancialSituationMemory:
@@ -90,6 +93,42 @@ class FinancialSituationMemory:
             })
 
         return results
+
+    def save_to_file(self, path: str):
+        """Serialize documents and recommendations to JSON using an atomic write.
+
+        Args:
+            path: Destination file path. Parent directories are created if needed.
+        """
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        data = {
+            "documents": self.documents,
+            "recommendations": self.recommendations,
+        }
+        dir_name = os.path.dirname(os.path.abspath(path))
+        with tempfile.NamedTemporaryFile(
+            mode="w", dir=dir_name, delete=False, suffix=".tmp"
+        ) as tmp:
+            json.dump(data, tmp)
+            tmp_path = tmp.name
+        os.replace(tmp_path, path)
+
+    def load_from_file(self, path: str):
+        """Load documents and recommendations from a JSON file.
+
+        If the file does not exist, returns without error. If the JSON is
+        corrupt, JSONDecodeError propagates to the caller.
+
+        Args:
+            path: Path to a file previously written by save_to_file.
+        """
+        if not os.path.exists(path):
+            return
+        with open(path, "r") as f:
+            data = json.load(f)
+        self.documents = data["documents"]
+        self.recommendations = data["recommendations"]
+        self._rebuild_index()
 
     def clear(self):
         """Clear all stored memories."""
