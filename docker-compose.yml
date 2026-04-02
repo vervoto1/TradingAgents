@@ -1,0 +1,26 @@
+services:
+  tradingagents:
+    build: .
+    container_name: tradingagents
+    env_file:
+      - .env
+    environment:
+      # vLLM URLs — point to host machine where vLLM runs with GPU
+      # On Linux: use host.docker.internal (enabled via extra_hosts below)
+      # Override these if vLLM runs elsewhere
+      - DEEP_THINK_URL=http://host.docker.internal:8001/v1
+      - QUICK_THINK_URL=http://host.docker.internal:8002/v1
+    volumes:
+      # Persist reports on the host
+      - ./reports:/app/reports
+      # Persist data cache between runs
+      - tradingagents-cache:/app/tradingagents/dataflows/data_cache
+    extra_hosts:
+      # Makes host.docker.internal resolve to the host on Linux
+      - "host.docker.internal:host-gateway"
+    # Interactive mode for the 'analyze' command (tty + stdin)
+    stdin_open: true
+    tty: true
+
+volumes:
+  tradingagents-cache:
