@@ -555,6 +555,12 @@ def get_user_selections():
     )
     selected_llm_provider, backend_url = select_llm_provider()
 
+    # For vLLM, ask for separate deep/quick thinker URLs
+    deep_think_url = None
+    quick_think_url = None
+    if selected_llm_provider.lower() == "vllm":
+        deep_think_url, quick_think_url = ask_vllm_urls()
+
     # Step 7: Thinking agents
     console.print(
         create_question_box(
@@ -602,6 +608,8 @@ def get_user_selections():
         "research_depth": selected_research_depth,
         "llm_provider": selected_llm_provider.lower(),
         "backend_url": backend_url,
+        "deep_think_url": deep_think_url,
+        "quick_think_url": quick_think_url,
         "shallow_thinker": selected_shallow_thinker,
         "deep_thinker": selected_deep_thinker,
         "google_thinking_level": thinking_level,
@@ -936,6 +944,10 @@ def run_analysis():
     config["quick_think_llm"] = selections["shallow_thinker"]
     config["deep_think_llm"] = selections["deep_thinker"]
     config["backend_url"] = selections["backend_url"]
+    if selections.get("deep_think_url"):
+        config["deep_think_url"] = selections["deep_think_url"]
+    if selections.get("quick_think_url"):
+        config["quick_think_url"] = selections["quick_think_url"]
     config["llm_provider"] = selections["llm_provider"].lower()
     # Provider-specific thinking configuration
     config["google_thinking_level"] = selections.get("google_thinking_level")

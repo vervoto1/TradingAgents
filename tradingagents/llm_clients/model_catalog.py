@@ -89,10 +89,12 @@ MODEL_OPTIONS: ProviderModeOptions = {
     },
     "vllm": {
         "quick": [
+            ("Qwen3.5-35B-A3B-AWQ (35B MoE, local vLLM)", "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"),
             ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
         ],
         "deep": [
             ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
+            ("Qwen3.5-35B-A3B-AWQ (35B MoE, local vLLM)", "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"),
         ],
     },
 }

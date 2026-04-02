@@ -284,6 +284,19 @@ def ask_gemini_thinking_config() -> str | None:
     ).ask()
 
 
+def ask_vllm_urls() -> tuple[str, str]:
+    """Ask for separate vLLM URLs for deep and quick thinker models."""
+    deep_url = questionary.text(
+        "Enter Deep-Thinker vLLM URL:",
+        default="http://localhost:8001/v1",
+    ).ask()
+    quick_url = questionary.text(
+        "Enter Quick-Thinker vLLM URL:",
+        default="http://localhost:8002/v1",
+    ).ask()
+    return deep_url, quick_url
+
+
 def ask_output_language() -> str:
     """Ask for report output language."""
     choice = questionary.select(
