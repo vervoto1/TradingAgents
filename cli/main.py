@@ -1213,7 +1213,91 @@ def run_analysis():
 
 @app.command()
 def analyze():
+    """Interactive analysis with guided prompts."""
     run_analysis()
+
+
+@app.command()
+def run(
+    ticker: str = typer.Argument(..., help="Ticker symbol to analyze (e.g. NVDA, DHL.DE)"),
+    date: str = typer.Argument(..., help="Analysis date in YYYY-MM-DD format"),
+    provider: str = typer.Option("vllm", help="LLM provider (openai, anthropic, google, xai, ollama, vllm, openrouter)"),
+    deep_model: str = typer.Option("QuantTrio/Qwen3.5-27B-AWQ", "--deep-model", help="Deep thinking model name"),
+    quick_model: str = typer.Option("Qwen/Qwen3.5-35B-A3B-GPTQ-Int4", "--quick-model", help="Quick thinking model name"),
+    deep_url: str = typer.Option("http://localhost:8001/v1", "--deep-url", help="Deep thinker API URL"),
+    quick_url: str = typer.Option("http://localhost:8002/v1", "--quick-url", help="Quick thinker API URL"),
+    analysts: str = typer.Option("market,social,news,fundamentals", help="Comma-separated analyst types: market,social,news,fundamentals"),
+    depth: int = typer.Option(1, help="Research depth: 1=shallow, 3=medium, 5=deep"),
+    output_dir: str = typer.Option(None, "--output", "-o", help="Output directory (default: reports/<ticker>_<timestamp>)"),
+    language: str = typer.Option("English", help="Output language for reports"),
+):
+    """Non-interactive analysis for automation and scripting."""
+    import re
+
+    # Validate date format
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+        console.print("[red]Error: Date must be in YYYY-MM-DD format[/red]")
+        raise typer.Exit(1)
+
+    # Parse analysts
+    analyst_list = [a.strip().lower() for a in analysts.split(",")]
+    valid_analysts = {"market", "social", "news", "fundamentals"}
+    invalid = set(analyst_list) - valid_analysts
+    if invalid:
+        console.print(f"[red]Error: Invalid analyst(s): {invalid}. Valid: {valid_analysts}[/red]")
+        raise typer.Exit(1)
+
+    # Build config
+    config = DEFAULT_CONFIG.copy()
+    config["llm_provider"] = provider.lower()
+    config["deep_think_llm"] = deep_model
+    config["quick_think_llm"] = quick_model
+    config["deep_think_url"] = deep_url
+    config["quick_think_url"] = quick_url
+    config["backend_url"] = deep_url  # fallback
+    config["max_debate_rounds"] = depth
+    config["max_risk_discuss_rounds"] = depth
+    config["output_language"] = language
+
+    ticker = ticker.strip().upper()
+
+    console.print(f"\n[bold cyan]TradingAgents Headless Analysis[/bold cyan]")
+    console.print(f"  Ticker:    {ticker}")
+    console.print(f"  Date:      {date}")
+    console.print(f"  Provider:  {provider}")
+    console.print(f"  Deep:      {deep_model} @ {deep_url}")
+    console.print(f"  Quick:     {quick_model} @ {quick_url}")
+    console.print(f"  Analysts:  {', '.join(analyst_list)}")
+    console.print(f"  Depth:     {depth}")
+    console.print()
+
+    # Run analysis
+    ta = TradingAgentsGraph(
+        selected_analysts=analyst_list,
+        debug=True,
+        config=config,
+    )
+
+    start_time = time.time()
+    final_state, decision = ta.propagate(ticker, date)
+    elapsed = time.time() - start_time
+
+    # Auto-save results
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    if output_dir:
+        save_path = Path(output_dir)
+    else:
+        save_path = Path.cwd() / "reports" / f"{ticker}_{timestamp}"
+
+    try:
+        report_file = save_report_to_disk(final_state, ticker, save_path)
+        console.print(f"\n[green]Report saved to:[/green] {save_path.resolve()}")
+        console.print(f"  [dim]Complete report:[/dim] {report_file.name}")
+    except Exception as e:
+        console.print(f"[red]Error saving report: {e}[/red]")
+
+    console.print(f"\n[bold]Decision:[/bold] {decision}")
+    console.print(f"[dim]Completed in {elapsed:.1f}s[/dim]")
 
 
 if __name__ == "__main__":

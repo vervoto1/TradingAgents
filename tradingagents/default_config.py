@@ -8,10 +8,12 @@ DEFAULT_CONFIG = {
         "dataflows/data_cache",
     ),
     # LLM settings
-    "llm_provider": "openai",
-    "deep_think_llm": "gpt-5.4",
-    "quick_think_llm": "gpt-5.4-mini",
-    "backend_url": "https://api.openai.com/v1",
+    "llm_provider": "vllm",
+    "deep_think_llm": "QuantTrio/Qwen3.5-27B-AWQ",
+    "quick_think_llm": "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4",
+    "backend_url": "http://localhost:8001/v1",
+    "deep_think_url": "http://localhost:8001/v1",
+    "quick_think_url": "http://localhost:8002/v1",
     # Provider-specific thinking configuration
     "google_thinking_level": None,      # "high", "minimal", etc.
     "openai_reasoning_effort": None,    # "medium", "high", "low"
