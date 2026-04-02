@@ -140,23 +140,26 @@ cp .env.example .env
 
 ### Docker
 
-Run TradingAgents in a container (connects to vLLM on the host machine):
+Run TradingAgents in a persistent container that connects to vLLM via a shared Docker network:
 
 ```bash
 docker compose build
-docker compose run --rm tradingagents run NVDA 2025-01-15
+docker compose up -d
 ```
 
-For interactive mode:
+Enter the container to run analyses:
 ```bash
-docker compose run --rm tradingagents analyze
+# Interactive CLI
+docker exec -it tradingagents tradingagents analyze
+
+# Headless analysis
+docker exec -it tradingagents tradingagents run NVDA 2025-01-15
+
+# Shell access
+docker exec -it tradingagents bash
 ```
 
-If vLLM runs on a different host, override the URLs:
-```bash
-DEEP_THINK_URL=http://gpu-server:8001/v1 QUICK_THINK_URL=http://gpu-server:8002/v1 \
-  docker compose run --rm tradingagents run NVDA 2025-01-15
-```
+By default, the container joins the `dip_processor-network` and connects to `vllm-vision` and `vllm-finance` containers. Override the vLLM URLs via environment variables in `docker-compose.yml` if your setup differs.
 
 ### CLI Usage
 
