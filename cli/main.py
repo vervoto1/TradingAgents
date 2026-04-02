@@ -1222,7 +1222,7 @@ def run(
     ticker: str = typer.Argument(..., help="Ticker symbol to analyze (e.g. NVDA, DHL.DE)"),
     date: str = typer.Argument(..., help="Analysis date in YYYY-MM-DD format"),
     provider: str = typer.Option("vllm", help="LLM provider (openai, anthropic, google, xai, ollama, vllm, openrouter)"),
-    deep_model: str = typer.Option("QuantTrio/Qwen3.5-27B-AWQ", "--deep-model", help="Deep thinking model name"),
+    deep_model: str = typer.Option("cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4", "--deep-model", help="Deep thinking model name"),
     quick_model: str = typer.Option("Qwen/Qwen3.5-35B-A3B-GPTQ-Int4", "--quick-model", help="Quick thinking model name"),
     deep_url: str = typer.Option("http://localhost:8001/v1", "--deep-url", help="Deep thinker API URL"),
     quick_url: str = typer.Option("http://localhost:8002/v1", "--quick-url", help="Quick thinker API URL"),

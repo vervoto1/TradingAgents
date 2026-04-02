@@ -3,7 +3,7 @@ from tradingagents.default_config import DEFAULT_CONFIG
 
 config = DEFAULT_CONFIG.copy()
 config["llm_provider"] = "vllm"
-config["deep_think_llm"] = "QuantTrio/Qwen3.5-27B-AWQ"
+config["deep_think_llm"] = "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4"
 config["deep_think_url"] = "http://localhost:8001/v1"
 config["quick_think_llm"] = "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"
 config["quick_think_url"] = "http://localhost:8002/v1"

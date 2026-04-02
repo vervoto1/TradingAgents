@@ -75,13 +75,13 @@ MODEL_OPTIONS: ProviderModeOptions = {
     },
     "ollama": {
         "quick": [
-            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4"),
             ("Qwen3:latest (8B, local)", "qwen3:latest"),
             ("GPT-OSS:latest (20B, local)", "gpt-oss:latest"),
             ("GLM-4.7-Flash:latest (30B, local)", "glm-4.7-flash:latest"),
         ],
         "deep": [
-            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4"),
             ("GLM-4.7-Flash:latest (30B, local)", "glm-4.7-flash:latest"),
             ("GPT-OSS:latest (20B, local)", "gpt-oss:latest"),
             ("Qwen3:latest (8B, local)", "qwen3:latest"),
@@ -90,10 +90,10 @@ MODEL_OPTIONS: ProviderModeOptions = {
     "vllm": {
         "quick": [
             ("Qwen3.5-35B-A3B-AWQ (35B MoE, local vLLM)", "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"),
-            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4"),
         ],
         "deep": [
-            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "QuantTrio/Qwen3.5-27B-AWQ"),
+            ("Qwen3.5-27B-AWQ (27B, local vLLM)", "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4"),
             ("Qwen3.5-35B-A3B-AWQ (35B MoE, local vLLM)", "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"),
         ],
     },

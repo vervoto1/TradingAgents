@@ -9,7 +9,7 @@ DEFAULT_CONFIG = {
     ),
     # LLM settings
     "llm_provider": "vllm",
-    "deep_think_llm": "QuantTrio/Qwen3.5-27B-AWQ",
+    "deep_think_llm": "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4",
     "quick_think_llm": "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4",
     "backend_url": os.getenv("DEEP_THINK_URL", "http://localhost:8001/v1"),
     "deep_think_url": os.getenv("DEEP_THINK_URL", "http://localhost:8001/v1"),
