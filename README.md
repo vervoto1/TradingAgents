@@ -138,6 +138,26 @@ Alternatively, copy `.env.example` to `.env` and fill in your keys:
 cp .env.example .env
 ```
 
+### Docker
+
+Run TradingAgents in a container (connects to vLLM on the host machine):
+
+```bash
+docker compose build
+docker compose run --rm tradingagents run NVDA 2025-01-15
+```
+
+For interactive mode:
+```bash
+docker compose run --rm tradingagents analyze
+```
+
+If vLLM runs on a different host, override the URLs:
+```bash
+DEEP_THINK_URL=http://gpu-server:8001/v1 QUICK_THINK_URL=http://gpu-server:8002/v1 \
+  docker compose run --rm tradingagents run NVDA 2025-01-15
+```
+
 ### CLI Usage
 
 Launch the interactive CLI:

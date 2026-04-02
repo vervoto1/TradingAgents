@@ -16,6 +16,10 @@ pip install .
 tradingagents
 # or: python -m cli.main
 
+# Docker
+docker compose build
+docker compose run --rm tradingagents run NVDA 2025-01-15
+
 # Run all tests
 python -m pytest tests/
 
@@ -49,7 +53,7 @@ Analysts (parallel-capable) → Bull/Bear Debate → Research Manager → Trader
 ### Key Subsystems
 
 - **Graph orchestration** (`graph/setup.py`, `graph/conditional_logic.py`) — Builds the LangGraph, routes edges based on debate round counts and selected analysts.
-- **LLM client factory** (`llm_clients/factory.py`) — Multi-provider support (OpenAI, Anthropic, Google, xAI, OpenRouter, Ollama). Uses a dual-model strategy: `deep_think_llm` for reasoning-heavy tasks, `quick_think_llm` for lighter ones.
+- **LLM client factory** (`llm_clients/factory.py`) — Multi-provider support (OpenAI, Anthropic, Google, xAI, OpenRouter, Ollama, vLLM). Uses a dual-model strategy: `deep_think_llm` for reasoning-heavy tasks, `quick_think_llm` for lighter ones.
 - **Data layer** (`dataflows/interface.py`) — Vendor-agnostic tool routing. Supports yfinance (default) and Alpha Vantage with per-category or per-tool vendor overrides and automatic fallback.
 - **Memory** (`agents/utils/memory.py`) — BM25 lexical similarity for retrieving past trading situations. Separate memory instances per agent role. Fed via `ta.reflect_and_remember()`.
 - **Configuration** (`default_config.py`) — Central config dict controlling LLM provider/models, debate rounds, data vendors, output language. Passed into `TradingAgentsGraph` constructor.
@@ -78,4 +82,6 @@ Agent state (`AgentState` TypedDict in `agents/utils/`) carries: `company_of_int
 
 - Requires API keys for the chosen LLM provider (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`)
 - Optional: `ALPHA_VANTAGE_API_KEY` for Alpha Vantage data vendor
+- Optional: `DEEP_THINK_URL` and `QUICK_THINK_URL` to override vLLM endpoint URLs (defaults: `http://localhost:8001/v1` and `http://localhost:8002/v1`)
 - Python >=3.10
+- Docker (optional, for containerized execution via `docker compose`)
