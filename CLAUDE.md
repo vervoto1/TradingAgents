@@ -89,6 +89,6 @@ Agent state (`AgentState` TypedDict in `agents/utils/`) carries: `company_of_int
 
 - Requires API keys for the chosen LLM provider (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`)
 - Optional: `ALPHA_VANTAGE_API_KEY` for Alpha Vantage data vendor
-- Optional: `DEEP_THINK_URL` and `QUICK_THINK_URL` to override vLLM endpoint URLs (defaults: `http://localhost:8001/v1` and `http://localhost:8002/v1`)
+- Optional: `DEEP_THINK_URL` and `QUICK_THINK_URL` to override vLLM endpoint URLs (default: `http://localhost:8001/v1` for both)
 - Python >=3.10
 - Docker (optional, for containerized execution via `docker compose`)

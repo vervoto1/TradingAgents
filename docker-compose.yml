@@ -7,7 +7,7 @@ services:
     environment:
       # With host networking, vLLM is on localhost just like running natively
       - DEEP_THINK_URL=http://localhost:8001/v1
-      - QUICK_THINK_URL=http://localhost:8002/v1
+      - QUICK_THINK_URL=http://localhost:8001/v1
     volumes:
       # Persist reports on the host
       - ./reports:/app/reports

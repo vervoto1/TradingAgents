@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir .
 COPY . .
 
 # Re-install in editable mode so the CLI entrypoint picks up local code
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -e . pytest
 
 # Default results directory
 RUN mkdir -p /app/reports

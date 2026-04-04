@@ -293,7 +293,7 @@ def ask_vllm_urls() -> tuple[str, str]:
     ).ask()
     quick_url = questionary.text(
         "Enter Quick-Thinker vLLM URL:",
-        default=os.getenv("QUICK_THINK_URL", "http://localhost:8002/v1"),
+        default=os.getenv("QUICK_THINK_URL", "http://localhost:8001/v1"),
     ).ask()
     return deep_url, quick_url
 
