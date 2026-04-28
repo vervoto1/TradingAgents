@@ -1,23 +1,30 @@
 import os
 
+_TRADINGAGENTS_HOME = os.path.join(os.path.expanduser("~"), ".tradingagents")
+
 DEFAULT_CONFIG = {
     "project_dir": os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
-    "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR", "./results"),
-    "data_cache_dir": os.path.join(
-        os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
-        "dataflows/data_cache",
-    ),
+    "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR", os.path.join(_TRADINGAGENTS_HOME, "logs")),
+    "data_cache_dir": os.getenv("TRADINGAGENTS_CACHE_DIR", os.path.join(_TRADINGAGENTS_HOME, "cache")),
+    "memory_log_path": os.getenv("TRADINGAGENTS_MEMORY_LOG_PATH", os.path.join(_TRADINGAGENTS_HOME, "memory", "trading_memory.md")),
+    # Optional cap on the number of resolved memory log entries. When set,
+    # the oldest resolved entries are pruned once this limit is exceeded.
+    # Pending entries are never pruned. None disables rotation entirely.
+    "memory_log_max_entries": None,
     # LLM settings
     "llm_provider": "vllm",
-    "deep_think_llm": "QuantTrio/Qwen3.5-27B-AWQ",
-    "quick_think_llm": "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4",
-    "backend_url": "http://localhost:8001/v1",
-    "deep_think_url": "http://localhost:8001/v1",
-    "quick_think_url": "http://localhost:8002/v1",
+    "deep_think_llm": "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4",
+    "quick_think_llm": "cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4",
+    "backend_url": os.getenv("DEEP_THINK_URL", "http://localhost:8001/v1"),
+    "deep_think_url": os.getenv("DEEP_THINK_URL", "http://localhost:8001/v1"),
+    "quick_think_url": os.getenv("QUICK_THINK_URL", "http://localhost:8001/v1"),
     # Provider-specific thinking configuration
     "google_thinking_level": None,      # "high", "minimal", etc.
     "openai_reasoning_effort": None,    # "medium", "high", "low"
     "anthropic_effort": None,           # "high", "medium", "low"
+    # Checkpoint/resume: when True, LangGraph saves state after each node
+    # so a crashed run can resume from the last successful step.
+    "checkpoint_enabled": False,
     # Output language for analyst reports and final decision
     # Internal agent debate stays in English for reasoning quality
     "output_language": "English",
