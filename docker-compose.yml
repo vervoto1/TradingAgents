@@ -13,6 +13,8 @@ services:
       - ./reports:/app/reports
       # Persist data cache between runs
       - tradingagents-cache:/app/tradingagents/dataflows/data_cache
+      # Persist memory log and logs
+      - tradingagents-data:/root/.tradingagents
     # Use host network — same networking as running natively
     # Avoids Docker NAT issues with yfinance/Yahoo connections
     network_mode: host
@@ -24,3 +26,4 @@ services:
 
 volumes:
   tradingagents-cache:
+  tradingagents-data:

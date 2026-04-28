@@ -13,8 +13,15 @@ build
 !.env.example
 reports
 results
+eval_results
 *.log
 .ruff_cache
 .pytest_cache
 .mypy_cache
 uv.lock
+.venv
+.idea
+.vscode
+.DS_Store
+Dockerfile
+docker-compose.yml

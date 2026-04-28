@@ -12,35 +12,20 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 
 from .schema import AnalysisResult, _state_to_result
 
-# Names of the 5 memory attributes on TradingAgentsGraph
-_MEMORY_ATTRS = [
-    "bull_memory",
-    "bear_memory",
-    "trader_memory",
-    "invest_judge_memory",
-    "portfolio_manager_memory",
-]
-
 
 class TradingAgentsClient:
     """Wrapper around TradingAgentsGraph for programmatic use.
 
-    Provides structured output, batch analysis, memory persistence,
-    and a feedback loop for learning from past decisions.
+    Provides structured output, batch analysis, and a feedback loop
+    for learning from past decisions via the persistent decision log.
     """
 
     def __init__(
         self,
         config: Optional[Dict[str, Any]] = None,
-        memory_dir: str = "data/memory",
-        auto_load_memory: bool = True,
     ):
         self.config = config or DEFAULT_CONFIG.copy()
-        self.memory_dir = memory_dir
         self._graph: Optional[TradingAgentsGraph] = None
-
-        if auto_load_memory:
-            self.load_memory()
 
     def _ensure_graph(self, analysts: Optional[List[str]] = None, depth: int = 1):
         """Lazily create or reconfigure the graph."""
@@ -54,21 +39,6 @@ class TradingAgentsClient:
             debug=False,
             config=config,
         )
-
-        # Restore persisted memories onto the new graph instance
-        self._load_memories_onto_graph()
-
-    def _load_memories_onto_graph(self):
-        """Load persisted memory files onto the current graph's memory instances."""
-        if self._graph is None:
-            return
-        for attr in _MEMORY_ATTRS:
-            mem = getattr(self._graph, attr, None)
-            if mem is None:
-                continue
-            path = os.path.join(self.memory_dir, f"{attr}.json")
-            if os.path.exists(path):
-                mem.load_from_file(path)
 
     def analyze(
         self,
@@ -84,14 +54,11 @@ class TradingAgentsClient:
         state, decision = self._graph.propagate(ticker.strip().upper(), date)
         elapsed = time.time() - start
 
-        memory_log = state.get("memory_log", [])
-
         return _state_to_result(
             state=state,
             decision=decision,
             config=self.config,
             elapsed=elapsed,
-            memory_log=memory_log,
         )
 
     def analyze_batch(self, requests: List[Dict[str, Any]]) -> List[AnalysisResult]:
@@ -111,26 +78,23 @@ class TradingAgentsClient:
             results.append(result)
         return results
 
-    def feedback(self, returns_losses) -> None:
-        """Reflect on the last analysis and persist updated memories."""
-        if self._graph is None:
-            raise RuntimeError("No analysis has been run yet. Call analyze() first.")
-        self._graph.reflect_and_remember(returns_losses)
-        self.save_memory()
+    def reflect_on_outcome(self, ticker: str, trade_date: str, raw_return: float, alpha_return: float, holding_days: int = 5) -> None:
+        """Reflect on a past decision and update the decision log.
 
-    def save_memory(self) -> None:
-        """Persist all memory instances to disk."""
+        Uses the graph's memory log to find the pending entry, generates
+        a reflection, and updates the log with outcome data.
+        """
         if self._graph is None:
-            return
-        os.makedirs(self.memory_dir, exist_ok=True)
-        for attr in _MEMORY_ATTRS:
-            mem = getattr(self._graph, attr, None)
-            if mem is None:
-                continue
-            path = os.path.join(self.memory_dir, f"{attr}.json")
-            mem.save_to_file(path)
-
-    def load_memory(self) -> None:
-        """Load all memory instances from disk (if files exist)."""
-        if self._graph is not None:
-            self._load_memories_onto_graph()
+            self._ensure_graph()
+        self._graph.memory_log.update_with_outcome(
+            ticker=ticker,
+            trade_date=trade_date,
+            raw_return=raw_return,
+            alpha_return=alpha_return,
+            holding_days=holding_days,
+            reflection=self._graph.reflector.reflect_on_final_decision(
+                final_decision="",
+                raw_return=raw_return,
+                alpha_return=alpha_return,
+            ),
+        )
