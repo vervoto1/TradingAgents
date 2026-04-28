@@ -1300,8 +1300,7 @@ def run(
     # JSON output mode — print structured result to stdout and exit
     if json_output:
         from tradingagents.api.schema import _state_to_result
-        memory_log = final_state.get("memory_log", [])
-        result = _state_to_result(final_state, decision, config, elapsed, memory_log)
+        result = _state_to_result(final_state, decision, config, elapsed)
         print(result.to_json())
         raise typer.Exit(0)
 
