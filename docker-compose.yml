@@ -1,35 +1,29 @@
 services:
   tradingagents:
     build: .
-    env_file:
-      - .env
-    volumes:
-      - tradingagents_data:/home/appuser/.tradingagents
-    tty: true
-    stdin_open: true
-
-  ollama:
-    image: ollama/ollama:latest
-    volumes:
-      - ollama_data:/root/.ollama
-    profiles:
-      - ollama
-
-  tradingagents-ollama:
-    build: .
+    container_name: tradingagents
     env_file:
       - .env
     environment:
-      - LLM_PROVIDER=ollama
+      # With host networking, vLLM is on localhost just like running natively
+      - DEEP_THINK_URL=http://localhost:8001/v1
+      - QUICK_THINK_URL=http://localhost:8001/v1
     volumes:
-      - tradingagents_data:/home/appuser/.tradingagents
-    depends_on:
-      - ollama
-    tty: true
+      # Persist reports on the host
+      - ./reports:/app/reports
+      # Persist data cache between runs
+      - tradingagents-cache:/app/tradingagents/dataflows/data_cache
+      # Persist memory log and logs
+      - tradingagents-data:/root/.tradingagents
+    # Use host network — same networking as running natively
+    # Avoids Docker NAT issues with yfinance/Yahoo connections
+    network_mode: host
+    # Keep container running for interactive access
+    entrypoint: ["tail", "-f", "/dev/null"]
     stdin_open: true
-    profiles:
-      - ollama
+    tty: true
+    restart: unless-stopped
 
 volumes:
-  tradingagents_data:
-  ollama_data:
+  tradingagents-cache:
+  tradingagents-data:

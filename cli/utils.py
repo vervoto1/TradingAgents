@@ -251,6 +251,7 @@ def select_llm_provider() -> tuple[str, str | None]:
         ("OpenRouter", "openrouter", "https://openrouter.ai/api/v1"),
         ("Azure OpenAI", "azure", None),
         ("Ollama", "ollama", ollama_url),
+        ("vLLM", "vllm", os.getenv("DEEP_THINK_URL", "http://localhost:8001/v1")),
     ]
 
     choice = questionary.select(
@@ -341,11 +342,11 @@ def ask_vllm_urls() -> tuple[str, str]:
     """Ask for separate vLLM URLs for deep and quick thinker models."""
     deep_url = questionary.text(
         "Enter Deep-Thinker vLLM URL:",
-        default="http://localhost:8001/v1",
+        default=os.getenv("DEEP_THINK_URL", "http://localhost:8001/v1"),
     ).ask()
     quick_url = questionary.text(
         "Enter Quick-Thinker vLLM URL:",
-        default="http://localhost:8002/v1",
+        default=os.getenv("QUICK_THINK_URL", "http://localhost:8001/v1"),
     ).ask()
     return deep_url, quick_url
 

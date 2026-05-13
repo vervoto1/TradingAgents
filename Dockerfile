@@ -1,28 +1,31 @@
-FROM python:3.12-slim AS builder
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-WORKDIR /build
-COPY . .
-RUN pip install --no-cache-dir .
-
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# System deps for building native extensions
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc g++ && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+WORKDIR /app
 
+# Install Python dependencies first (layer cache)
+COPY pyproject.toml requirements.txt ./
+RUN pip install --no-cache-dir .
+
+# Copy application code
+COPY . .
+
+# Re-install in editable mode so the CLI entrypoint picks up local code
+RUN pip install --no-cache-dir -e . pytest
+
+# Default results directory
+RUN mkdir -p /app/reports
+ENV TRADINGAGENTS_RESULTS_DIR=/app/reports
+
+# Drop privileges: create appuser, give them /app and the home dir tradingagents writes to
 RUN useradd --create-home appuser \
- && install -d -m 0755 -o appuser -g appuser /home/appuser/.tradingagents
+ && install -d -m 0755 -o appuser -g appuser /home/appuser/.tradingagents \
+ && chown -R appuser:appuser /app
 USER appuser
-WORKDIR /home/appuser/app
-
-COPY --from=builder --chown=appuser:appuser /build .
 
 ENTRYPOINT ["tradingagents"]
+CMD ["--help"]

@@ -162,6 +162,29 @@ Alternatively, copy `.env.example` to `.env` and fill in your keys:
 cp .env.example .env
 ```
 
+### Docker
+
+Run TradingAgents in a persistent container that connects to vLLM via a shared Docker network:
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Enter the container to run analyses:
+```bash
+# Interactive CLI
+docker exec -it tradingagents tradingagents analyze
+
+# Headless analysis
+docker exec -it tradingagents tradingagents run NVDA 2025-01-15
+
+# Shell access
+docker exec -it tradingagents bash
+```
+
+By default, the container joins the `dip_processor-network` and connects to `vllm-vision` and `vllm-finance` containers. Override the vLLM URLs via environment variables in `docker-compose.yml` if your setup differs.
+
 ### CLI Usage
 
 Launch the interactive CLI:
@@ -191,29 +214,59 @@ An interface will appear showing results as they load, letting you track the age
 
 We built TradingAgents with LangGraph to ensure flexibility and modularity. The framework supports multiple LLM providers: OpenAI, Google, Anthropic, xAI, DeepSeek, Qwen (Alibaba DashScope, international and China endpoints), GLM (Zhipu), MiniMax (global + China), OpenRouter, Ollama for local models, and Azure OpenAI for enterprise.
 
-### Python Usage
+### Headless CLI
 
-To use TradingAgents inside your code, you can import the `tradingagents` module and initialize a `TradingAgentsGraph()` object. The `.propagate()` function will return a decision. You can run `main.py`, here's also a quick example:
+Run analyses non-interactively for scripting and automation:
 
-```python
-from tradingagents.graph.trading_graph import TradingAgentsGraph
-from tradingagents.default_config import DEFAULT_CONFIG
+```bash
+# Basic analysis with defaults (local vLLM)
+tradingagents run NVDA 2025-01-15
 
-ta = TradingAgentsGraph(debug=True, config=DEFAULT_CONFIG.copy())
+# Select specific analysts and research depth
+tradingagents run NVDA 2025-01-15 --analysts market,news --depth 3
 
-# forward propagate
-_, decision = ta.propagate("NVDA", "2026-01-15")
-print(decision)
+# JSON output for piping to other systems
+tradingagents run NVDA 2025-01-15 --json | jq '.decision'
+
+# Use a cloud provider
+tradingagents run NVDA 2025-01-15 --provider anthropic --deep-model claude-sonnet-4-6 --quick-model claude-haiku-4-5
 ```
 
-You can also adjust the default configuration to set your own choice of LLMs, debate rounds, etc.
+### Python API (for external system integration)
+
+The `TradingAgentsClient` provides structured output with full debate transcripts, memory context, and automatic memory persistence:
+
+```python
+from tradingagents.api import TradingAgentsClient
+
+# Initialize with auto-loaded memories from disk
+client = TradingAgentsClient(memory_dir="data/memory")
+
+# Run analysis, get structured result
+result = client.analyze("NVDA", "2025-01-15", analysts=["market", "news"], depth=1)
+print(result.decision)              # "BUY"
+print(result.to_json())             # Full JSON with reports, debates, memory context
+
+# Batch analysis
+results = client.analyze_batch([
+    {"ticker": "NVDA", "date": "2025-01-15"},
+    {"ticker": "AAPL", "date": "2025-01-15"},
+])
+
+# Feed back actual returns to improve future decisions
+client.feedback(returns_losses=500)  # Memories auto-persisted to disk
+```
+
+### Low-Level Python Usage
+
+For direct access to the graph and raw state:
 
 ```python
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
 config = DEFAULT_CONFIG.copy()
-config["llm_provider"] = "openai"        # openai, google, anthropic, xai, deepseek, qwen, qwen-cn, glm, glm-cn, minimax, minimax-cn, openrouter, ollama, azure
+config["llm_provider"] = "openai"        # openai, google, anthropic, xai, deepseek, qwen, qwen-cn, glm, glm-cn, minimax, minimax-cn, openrouter, ollama, vllm, azure
 config["deep_think_llm"] = "gpt-5.4"     # Model for complex reasoning
 config["quick_think_llm"] = "gpt-5.4-mini" # Model for quick tasks
 config["max_debate_rounds"] = 2

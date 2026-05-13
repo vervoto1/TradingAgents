@@ -16,6 +16,10 @@ pip install .
 tradingagents
 # or: python -m cli.main
 
+# Docker
+docker compose build
+docker compose run --rm tradingagents run NVDA 2025-01-15
+
 # Run all tests
 python -m pytest tests/
 
@@ -49,33 +53,42 @@ Analysts (parallel-capable) → Bull/Bear Debate → Research Manager → Trader
 ### Key Subsystems
 
 - **Graph orchestration** (`graph/setup.py`, `graph/conditional_logic.py`) — Builds the LangGraph, routes edges based on debate round counts and selected analysts.
-- **LLM client factory** (`llm_clients/factory.py`) — Multi-provider support (OpenAI, Anthropic, Google, xAI, OpenRouter, Ollama). Uses a dual-model strategy: `deep_think_llm` for reasoning-heavy tasks, `quick_think_llm` for lighter ones.
+- **LLM client factory** (`llm_clients/factory.py`) — Multi-provider support (OpenAI, Anthropic, Google, xAI, OpenRouter, Ollama, vLLM). Uses a dual-model strategy: `deep_think_llm` for reasoning-heavy tasks, `quick_think_llm` for lighter ones.
 - **Data layer** (`dataflows/interface.py`) — Vendor-agnostic tool routing. Supports yfinance (default) and Alpha Vantage with per-category or per-tool vendor overrides and automatic fallback.
 - **Memory** (`agents/utils/memory.py`) — BM25 lexical similarity for retrieving past trading situations. Separate memory instances per agent role. Fed via `ta.reflect_and_remember()`.
 - **Configuration** (`default_config.py`) — Central config dict controlling LLM provider/models, debate rounds, data vendors, output language. Passed into `TradingAgentsGraph` constructor.
 
 ### CLI (`cli/`)
 
-Interactive Typer + Rich application. Handles ticker selection, date picking, provider/model selection, analyst team configuration, and a real-time multi-panel dashboard showing agent progress and reports.
+Interactive Typer + Rich application (`tradingagents analyze`). Also supports headless mode (`tradingagents run TICKER DATE`) with `--json` flag for piping structured output to external systems.
+
+### API (`tradingagents/api/`)
+
+`TradingAgentsClient` wraps `TradingAgentsGraph` for external system integration. Returns structured `AnalysisResult` dataclasses with full debate transcripts, per-perspective risk arguments, and memory context (which past lessons were used, BM25 similarity scores). Supports memory persistence to JSON, batch analysis, and a feedback loop via `reflect_and_remember()`.
 
 ### Programmatic Usage
 
 ```python
-from tradingagents.graph.trading_graph import TradingAgentsGraph
+# High-level API (recommended for integrations)
+from tradingagents.api import TradingAgentsClient
+client = TradingAgentsClient(memory_dir="data/memory")
+result = client.analyze("NVDA", "2025-01-15")
+print(result.decision, result.to_json())
 
-ta = TradingAgentsGraph(
-    selected_analysts=["market", "social", "news", "fundamentals"],
-    config={"llm_provider": "openai", "deep_think_llm": "gpt-5.4", "quick_think_llm": "gpt-5.4-mini"}
-)
-result, decision = ta.propagate("NVDA", "2025-01-15")
+# Low-level graph access
+from tradingagents.graph.trading_graph import TradingAgentsGraph
+ta = TradingAgentsGraph(config={"llm_provider": "vllm"})
+state, decision = ta.propagate("NVDA", "2025-01-15")
 ```
 
 ### State Shape
 
-Agent state (`AgentState` TypedDict in `agents/utils/`) carries: `company_of_interest`, `trade_date`, analyst reports (`market_report`, `sentiment_report`, `news_report`, `fundamentals_report`), `investment_debate_state`, `risk_debate_state`, `trader_investment_plan`, and `final_trade_decision`.
+Agent state (`AgentState` TypedDict in `agents/utils/`) carries: `company_of_interest`, `trade_date`, analyst reports (`market_report`, `sentiment_report`, `news_report`, `fundamentals_report`), `investment_debate_state`, `risk_debate_state`, `trader_investment_plan`, `final_trade_decision`, and `memory_log` (additive reducer, tracks which past memories each agent used).
 
 ## Environment
 
 - Requires API keys for the chosen LLM provider (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`)
 - Optional: `ALPHA_VANTAGE_API_KEY` for Alpha Vantage data vendor
+- Optional: `DEEP_THINK_URL` and `QUICK_THINK_URL` to override vLLM endpoint URLs (default: `http://localhost:8001/v1` for both)
 - Python >=3.10
+- Docker (optional, for containerized execution via `docker compose`)

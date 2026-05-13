@@ -1272,14 +1272,15 @@ def run(
     ticker: str = typer.Argument(..., help="Ticker symbol to analyze (e.g. NVDA, DHL.DE)"),
     date: str = typer.Argument(..., help="Analysis date in YYYY-MM-DD format"),
     provider: str = typer.Option("vllm", help="LLM provider (openai, anthropic, google, xai, ollama, vllm, openrouter)"),
-    deep_model: str = typer.Option("QuantTrio/Qwen3.5-27B-AWQ", "--deep-model", help="Deep thinking model name"),
-    quick_model: str = typer.Option("Qwen/Qwen3.5-35B-A3B-GPTQ-Int4", "--quick-model", help="Quick thinking model name"),
+    deep_model: str = typer.Option("cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4", "--deep-model", help="Deep thinking model name"),
+    quick_model: str = typer.Option("cyankiwi/Qwen3.5-27B-AWQ-BF16-INT4", "--quick-model", help="Quick thinking model name"),
     deep_url: str = typer.Option("http://localhost:8001/v1", "--deep-url", help="Deep thinker API URL"),
-    quick_url: str = typer.Option("http://localhost:8002/v1", "--quick-url", help="Quick thinker API URL"),
+    quick_url: str = typer.Option("http://localhost:8001/v1", "--quick-url", help="Quick thinker API URL"),
     analysts: str = typer.Option("market,social,news,fundamentals", help="Comma-separated analyst types: market,social,news,fundamentals"),
     depth: int = typer.Option(1, help="Research depth: 1=shallow, 3=medium, 5=deep"),
     output_dir: str = typer.Option(None, "--output", "-o", help="Output directory (default: reports/<ticker>_<timestamp>)"),
     language: str = typer.Option("English", help="Output language for reports"),
+    json_output: bool = typer.Option(False, "--json", help="Output result as JSON to stdout (suppresses other output)"),
 ):
     """Non-interactive analysis for automation and scripting."""
     import re
@@ -1311,26 +1312,34 @@ def run(
 
     ticker = ticker.strip().upper()
 
-    console.print(f"\n[bold cyan]TradingAgents Headless Analysis[/bold cyan]")
-    console.print(f"  Ticker:    {ticker}")
-    console.print(f"  Date:      {date}")
-    console.print(f"  Provider:  {provider}")
-    console.print(f"  Deep:      {deep_model} @ {deep_url}")
-    console.print(f"  Quick:     {quick_model} @ {quick_url}")
-    console.print(f"  Analysts:  {', '.join(analyst_list)}")
-    console.print(f"  Depth:     {depth}")
-    console.print()
+    if not json_output:
+        console.print(f"\n[bold cyan]TradingAgents Headless Analysis[/bold cyan]")
+        console.print(f"  Ticker:    {ticker}")
+        console.print(f"  Date:      {date}")
+        console.print(f"  Provider:  {provider}")
+        console.print(f"  Deep:      {deep_model} @ {deep_url}")
+        console.print(f"  Quick:     {quick_model} @ {quick_url}")
+        console.print(f"  Analysts:  {', '.join(analyst_list)}")
+        console.print(f"  Depth:     {depth}")
+        console.print()
 
     # Run analysis
     ta = TradingAgentsGraph(
         selected_analysts=analyst_list,
-        debug=True,
+        debug=not json_output,
         config=config,
     )
 
     start_time = time.time()
     final_state, decision = ta.propagate(ticker, date)
     elapsed = time.time() - start_time
+
+    # JSON output mode — print structured result to stdout and exit
+    if json_output:
+        from tradingagents.api.schema import _state_to_result
+        result = _state_to_result(final_state, decision, config, elapsed)
+        print(result.to_json())
+        raise typer.Exit(0)
 
     # Auto-save results
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
