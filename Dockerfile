@@ -21,5 +21,11 @@ RUN pip install --no-cache-dir -e . pytest
 RUN mkdir -p /app/reports
 ENV TRADINGAGENTS_RESULTS_DIR=/app/reports
 
+# Drop privileges: create appuser, give them /app and the home dir tradingagents writes to
+RUN useradd --create-home appuser \
+ && install -d -m 0755 -o appuser -g appuser /home/appuser/.tradingagents \
+ && chown -R appuser:appuser /app
+USER appuser
+
 ENTRYPOINT ["tradingagents"]
 CMD ["--help"]
